@@ -1,0 +1,53 @@
+# LLMailSorter: n8n + PostgreSQL running locally.
+# Usage: `cp .env.example .env` (then fill it in), then `docker compose up -d`.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # n8n must only start once Postgres actually accepts connections,
+    # not merely once the container is running.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  n8n:
+    # Pinned version (not `latest`) so exported workflows stay reproducible.
+    image: n8nio/n8n:2.47.4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678" # reachable from this machine only
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres # service name above, resolved by the Docker network
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Key used to encrypt credentials (Gmail OAuth, LLM API keys) in the database.
+      # If it changes or is lost, stored credentials can no longer be decrypted.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      # Base URL used to build the OAuth redirect address given to Google.
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: ${TIMEZONE}
+      TZ: ${TIMEZONE}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      # Listen on IPv4: avoids a startup crash on hosts without IPv6.
+      N8N_LISTEN_ADDRESS: 0.0.0.0
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  n8n_data:
