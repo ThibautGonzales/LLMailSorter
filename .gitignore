@@ -1,0 +1,5 @@
+# Secrets locaux
+.env
+
+# Divers
+.DS_Store
