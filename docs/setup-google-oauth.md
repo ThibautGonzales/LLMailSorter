@@ -83,10 +83,21 @@ To avoid this, publish the app. This is done in **Google Cloud**, not in n8n:
    Do **not** upload a logo: a logo forces Google's verification. Then
    **Save**.
 3. Back in **Audience**, under **Publishing status** (currently **Testing**),
-   click **Publish app**
-   and confirm. The status becomes **In production**.
+   click **Publish app**. Google shows a "Push to production?" dialog with two
+   warnings that do not block personal use:
+   - *"Your app will be available to any user with a Google Account"*: in
+     practice, signing in also requires your Client ID and secret, which only
+     exist in your local n8n. You remain the only user.
+   - *"You will need to verify your app"*: Gmail scopes are classified as
+     restricted, so Google flags the app as needing verification. As long as
+     you do not submit it, the app keeps working as **unverified** (warning
+     screen at sign-in, 100-user cap).
+
+   Confirm. The status becomes **In production**.
 4. Back in n8n, open the Gmail credential and click **Sign in with Google**
    once more, so that n8n gets a token that no longer expires after 7 days.
+   On the "Google hasn't verified this app" screen, click **Advanced**, then
+   **Go to LLMailSorter (unsafe)**.
 
 For personal use you do not need Google's verification: the app stays
 "unverified" and you keep the warning screen at sign-in.
