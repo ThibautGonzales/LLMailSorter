@@ -1,5 +1,5 @@
-# LLMailSorter : n8n + PostgreSQL en local.
-# Lancement : `cp .env.example .env` (puis remplir), ensuite `docker compose up -d`.
+# LLMailSorter: n8n + PostgreSQL running locally.
+# Usage: `cp .env.example .env` (then fill it in), then `docker compose up -d`.
 
 services:
   postgres:
@@ -11,8 +11,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # n8n ne doit démarrer que quand Postgres accepte vraiment les connexions,
-    # pas seulement quand le conteneur est lancé.
+    # n8n must only start once Postgres actually accepts connections,
+    # not merely once the container is running.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -20,27 +20,27 @@ services:
       retries: 10
 
   n8n:
-    # Version figée (pas `latest`) pour que les workflows exportés restent reproductibles.
+    # Pinned version (not `latest`) so exported workflows stay reproducible.
     image: n8nio/n8n:2.47.4
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5678:5678" # accessible uniquement depuis ta machine
+      - "127.0.0.1:5678:5678" # reachable from this machine only
     environment:
       DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: postgres # nom du service ci-dessus, résolu par le réseau Docker
+      DB_POSTGRESDB_HOST: postgres # service name above, resolved by the Docker network
       DB_POSTGRESDB_PORT: 5432
       DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
       DB_POSTGRESDB_USER: ${POSTGRES_USER}
       DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
-      # Clé qui chiffre les credentials (OAuth Gmail, clés API LLM) dans la base.
-      # Si elle change ou se perd, les credentials enregistrés deviennent illisibles.
+      # Key used to encrypt credentials (Gmail OAuth, LLM API keys) in the database.
+      # If it changes or is lost, stored credentials can no longer be decrypted.
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
-      # URL utilisée pour construire l'adresse de retour OAuth donnée à Google.
+      # Base URL used to build the OAuth redirect address given to Google.
       WEBHOOK_URL: http://localhost:5678/
       GENERIC_TIMEZONE: ${TIMEZONE}
       TZ: ${TIMEZONE}
       N8N_DIAGNOSTICS_ENABLED: "false"
-      # Écoute en IPv4 : évite un crash au démarrage sur les machines sans IPv6.
+      # Listen on IPv4: avoids a startup crash on hosts without IPv6.
       N8N_LISTEN_ADDRESS: 0.0.0.0
     volumes:
       - n8n_data:/home/node/.n8n

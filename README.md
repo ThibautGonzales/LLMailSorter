@@ -1,15 +1,15 @@
 # LLMailSorter
 An email sorter, powered by LLM
 
-## Démarrage rapide
+## Quick start
 
-Prérequis : Docker Desktop (ou Docker Engine + Compose).
+Requirements: Docker Desktop (or Docker Engine + Compose).
 
 ```bash
-cp .env.example .env          # puis remplir les mots de passe
-openssl rand -hex 32          # à coller dans N8N_ENCRYPTION_KEY
+cp .env.example .env          # then fill in the passwords
+openssl rand -hex 32          # paste the output into N8N_ENCRYPTION_KEY
 docker compose up -d
 ```
 
-n8n est ensuite accessible sur http://localhost:5678.
-Arrêt : `docker compose down` (les données restent dans les volumes Docker).
+n8n is then available at http://localhost:5678.
+Stop it with `docker compose down` (data is kept in Docker volumes).
