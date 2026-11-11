@@ -68,10 +68,17 @@ While the app is in **Testing** mode, Google revokes the authorization after
 7 days. n8n then fails with an authentication error, and you have to click
 **Sign in with Google** again in the credential.
 
-To avoid this, you can switch the app to **In production** (**Audience >
-Publish app**). For personal use you do not need to go through Google's
-verification: the app stays "unverified", you keep the warning screen at
-sign-in, but the authorization no longer expires after 7 days.
+To avoid this, publish the app. This is done in **Google Cloud**, not in n8n:
+
+1. Open https://console.cloud.google.com/auth/audience (check that the
+   `LLMailSorter` project is selected).
+2. Under **Publishing status** (currently **Testing**), click **Publish app**
+   and confirm. The status becomes **In production**.
+3. Back in n8n, open the Gmail credential and click **Sign in with Google**
+   once more, so that n8n gets a token that no longer expires after 7 days.
+
+For personal use you do not need Google's verification: the app stays
+"unverified" and you keep the warning screen at sign-in.
 
 ## Troubleshooting
 
