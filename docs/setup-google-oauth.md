@@ -35,7 +35,9 @@ redirect URIs without one.
 
 ## 4. Create the OAuth client
 
-1. In n8n: **Overview > Create > Credential**, search for **Gmail OAuth2 API**.
+1. In n8n, open http://localhost:5678/home/credentials (skip the "Let's build
+   your first automation" welcome screen), create a credential and search for
+   **Gmail OAuth2 API**.
    Copy the **OAuth Redirect URL** shown at the top. It should be:
    `http://localhost:5678/rest/oauth2-credential/callback`
    Keep this tab open.
