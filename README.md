@@ -13,3 +13,5 @@ docker compose up -d
 
 n8n is then available at http://localhost:5678.
 Stop it with `docker compose down` (data is kept in Docker volumes).
+
+Then connect Gmail: see [docs/setup-google-oauth.md](docs/setup-google-oauth.md).
