@@ -1,0 +1,55 @@
+{
+  "name": "00 - Test Gmail connection",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "LLMailSorter - Gmail test",
+        "formDescription": "Reads the 5 most recent emails. Nothing is modified.",
+        "formFields": { "values": [] },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Start test",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [0, 0],
+      "webhookId": "a1b2c3d4-0001-4000-8000-0000000000ff"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "filters": {}
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Get latest emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "id", "value": "={{ $json.id }}", "type": "string" },
+            { "id": "f2", "name": "from", "value": "={{ $json.From }}", "type": "string" },
+            { "id": "f3", "name": "subject", "value": "={{ $json.Subject }}", "type": "string" },
+            { "id": "f4", "name": "snippet", "value": "={{ $json.snippet }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Keep sorting fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [440, 0]
+    }
+  ],
+  "connections": {
+    "Start test": { "main": [[{ "node": "Get latest emails", "type": "main", "index": 0 }]] },
+    "Get latest emails": { "main": [[{ "node": "Keep sorting fields", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
