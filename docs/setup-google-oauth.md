@@ -24,7 +24,9 @@ Prerequisite: n8n is running at http://localhost:5678 (see the README).
 2. **App information**: app name `LLMailSorter`, support email = your address.
 3. **Audience**: choose **External** (a personal Gmail account has no
    Workspace organization, so Internal is not available).
-4. **Contact information**: your address.
+4. **Contact information**: an email address **different from the support
+   email** above (Google rejects the same one). Any other address you own
+   works: it is only used for notifications about the Cloud project.
 5. Accept the Google API Services User Data Policy, then **Create**.
 6. In the left menu, open **Audience** > **Test users** > **Add users**, and
    add your own Gmail address. Only test users can sign in while the app is in
@@ -72,9 +74,14 @@ To avoid this, publish the app. This is done in **Google Cloud**, not in n8n:
 
 1. Open https://console.cloud.google.com/auth/audience (check that the
    `LLMailSorter` project is selected).
-2. Under **Publishing status** (currently **Testing**), click **Publish app**
+2. Google first requires a complete **Branding** page. Check that it has the
+   app name, the support email and a developer contact email (different from
+   the support email). Do **not** upload a logo: a logo forces Google's
+   verification. Leave the app domain links and authorized domains empty.
+3. Back in **Audience**, under **Publishing status** (currently **Testing**),
+   click **Publish app**
    and confirm. The status becomes **In production**.
-3. Back in n8n, open the Gmail credential and click **Sign in with Google**
+4. Back in n8n, open the Gmail credential and click **Sign in with Google**
    once more, so that n8n gets a token that no longer expires after 7 days.
 
 For personal use you do not need Google's verification: the app stays
