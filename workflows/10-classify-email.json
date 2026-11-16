@@ -39,7 +39,7 @@
             {}
           ]
         },
-        "jsonBody": "={\n  \"model\": \"gemini-decision-1\",\n  \"input\": {{ JSON.stringify(\"From: \" + ($json.sender ?? '') + \"\\nSubject: \" + ($json.subject ?? '') + \"\\n\\n\" + ($json.bodyStart ?? '').slice(0, 500)) }},\n  \"questions\": {\n    \"category\": {\n      \"type\": \"choice\",\n      \"instructions\": \"You are sorting a personal inbox. Which category best fits this email?\",\n      \"criteria\": {\n        \"subscriptions\": \"Newsletters and mailing lists the user chose to follow, with no payment involved.\",\n        \"invoices\": \"Invoices, receipts and payment confirmations for any amount, including renewals of paid service subscriptions.\",\n        \"jobs\": \"Job offers, applications, recruiters, job boards and work contracts.\",\n        \"admin\": \"Government, taxes, bank, insurance, health and utility paperwork.\",\n        \"orders\": \"Order confirmations, shipping notices and delivery tracking.\",\n        \"personal\": \"Emails personally written by friends or family.\",\n        \"security\": \"Login alerts, password resets, verification codes and account security warnings.\",\n        \"trash\": \"Spam, unsolicited ads, promotions and suspicious emails.\",\n        \"other\": \"None of the other categories clearly fits.\"\n      }\n    }\n  }\n}",
+        "jsonBody": "={\n  \"model\": \"gemini-decision-1\",\n  \"input\": {{ JSON.stringify(\"From: \" + ($json.sender ?? '') + \"\\nSubject: \" + ($json.subject ?? '') + \"\\n\\n\" + ($json.bodyStart ?? '').slice(0, 500)) }},\n  \"questions\": {\n    \"category\": {\n      \"type\": \"choice\",\n      \"instructions\": \"You are sorting a personal inbox. Which category best fits this email?\",\n      \"criteria\": {\n        \"subscriptions\": \"Newsletters and content the user signed up for: blogs, media, YouTube, Substack. No payment involved.\",\n        \"invoices\": \"Invoices, receipts and direct debits, including those of subscription services. As soon as an amount is paid, it is an invoice.\",\n        \"jobs\": \"Replies to job applications, recruiters, interview invitations and job alerts (LinkedIn, Indeed, Welcome to the Jungle).\",\n        \"admin\": \"Bank, taxes, family allowance (CAF), social security, health insurance, insurance, town hall.\",\n        \"orders\": \"Order confirmations, parcel tracking and returns.\",\n        \"personal\": \"Emails written by real people (family, friends), outside work.\",\n        \"security\": \"Verification codes, login alerts and password resets.\",\n        \"trash\": \"Ads, promotions, cold sales pitches and unsolicited marketing.\",\n        \"other\": \"Anything that clearly fits none of the other categories.\"\n      }\n    }\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -64,7 +64,7 @@
             {
               "id": "985b5d44-5bc5-4e18-8538-e4879e571cc6",
               "name": "category",
-              "value": "={{ $json.answers.category.choice }}",
+              "value": "={{ $json.answers.category.confidence < 0.6 ? 'notSure' : $json.answers.category.choice }}",
               "type": "string"
             },
             {
@@ -117,7 +117,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "9f7c4d69-0973-4ae8-b1b2-4b2a5a255d11",
+  "versionId": "bfc24938-cae0-47d0-9027-77c7068edcb8",
   "meta": {
     "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
   },
