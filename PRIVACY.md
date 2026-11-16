@@ -7,10 +7,11 @@ system and no analytics run by the author.
 
 - The tool reads emails from the Gmail account of the person who runs it,
   through the Gmail API, only when that person triggers a sort manually.
-- For each email, the sender, the subject and the beginning of the body are
-  sent to the LLM provider chosen by the user (for example Anthropic, OpenAI,
-  Google or Mistral) to pick a category. That provider's own privacy policy
-  applies to this data.
+- For each email, the sender, the subject and the first 500 characters of the
+  body are sent to the Google Gemini API (Gemini Decision 1) to pick a
+  category. Google's own terms apply to this data. The API key should belong
+  to a project with billing enabled: on the free tier, Google may use the
+  content to improve its products.
 
 ## What the tool does with it
 
@@ -18,7 +19,7 @@ system and no analytics run by the author.
 - It stores a history (email id, category, sorting date) in the local n8n
   database, on the user's own machine.
 - It never deletes emails on its own, never sends emails, and never shares
-  data with anyone other than the chosen LLM provider.
+  data with anyone other than the LLM provider.
 
 ## Where data is stored
 

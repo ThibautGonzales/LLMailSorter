@@ -1,0 +1,127 @@
+{
+  "name": "classify-email",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sender"
+            },
+            {
+              "name": "subject"
+            },
+            {
+              "name": "bodyStart"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        -160
+      ],
+      "id": "d9e80126-8b40-4b54-b47e-e0fc8bd65281",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/decisions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"model\": \"gemini-decision-1\",\n  \"input\": {{ JSON.stringify(\"From: \" + ($json.sender ?? '') + \"\\nSubject: \" + ($json.subject ?? '') + \"\\n\\n\" + ($json.bodyStart ?? '').slice(0, 500)) }},\n  \"questions\": {\n    \"category\": {\n      \"type\": \"choice\",\n      \"instructions\": \"You are sorting a personal inbox. Which category best fits this email?\",\n      \"criteria\": {\n        \"subscriptions\": \"Newsletters and content the user signed up for: blogs, media, YouTube, Substack. No payment involved.\",\n        \"invoices\": \"Invoices, receipts and direct debits, including those of subscription services. As soon as an amount is paid, it is an invoice.\",\n        \"jobs\": \"Replies to job applications, recruiters, interview invitations and job alerts (LinkedIn, Indeed, Welcome to the Jungle).\",\n        \"admin\": \"Bank, taxes, family allowance (CAF), social security, health insurance, insurance, town hall.\",\n        \"orders\": \"Order confirmations, parcel tracking and returns.\",\n        \"personal\": \"Emails written by real people (family, friends), outside work.\",\n        \"security\": \"Verification codes, login alerts and password resets.\",\n        \"trash\": \"Ads, promotions, cold sales pitches and unsolicited marketing.\",\n        \"other\": \"Anything that clearly fits none of the other categories.\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -192,
+        -160
+      ],
+      "id": "1fde3b2c-49cc-410b-b7ff-4398811b8bbc",
+      "name": "Call Gemini Decision API",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "eauSc4SDwsen0oH5",
+          "name": "Gemini Decision API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "985b5d44-5bc5-4e18-8538-e4879e571cc6",
+              "name": "category",
+              "value": "={{ $json.answers.category.confidence < 0.6 ? 'notSure' : $json.answers.category.choice }}",
+              "type": "string"
+            },
+            {
+              "id": "643bb91a-28bc-4aa7-a808-467875048836",
+              "name": "confidence",
+              "value": "={{ $json.answers.category.confidence }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        48,
+        -160
+      ],
+      "id": "b20be487-a416-4a2f-a56f-460375137590",
+      "name": "Extract category"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Call Gemini Decision API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Gemini Decision API": {
+      "main": [
+        [
+          {
+            "node": "Extract category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bfc24938-cae0-47d0-9027-77c7068edcb8",
+  "meta": {
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "PxDdPFN9okQwc5Bh",
+  "tags": []
+}
