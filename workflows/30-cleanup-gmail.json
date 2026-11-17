@@ -1,0 +1,154 @@
+{
+  "name": "30 - Cleanup Gmail",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "36eb02ce-8312-4f4f-9ad5-b7be1b89f71b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retention rules: one row per Gmail label, easy to tune.\n// Starred emails are never trashed, whatever the rule.\n// readOnly: true = only emails already opened are trashed (unread ones wait for the Everything rule).\nconst RETENTION_RULES = [\n  { label: null,                       keepDays: 1095, readOnly: false }, // Everything\n  { label: 'LLMailSorter/Junk',          keepDays: 7,    readOnly: true },\n  { label: 'LLMailSorter/Subscriptions', keepDays: 30,   readOnly: true },\n  { label: 'LLMailSorter/Security',      keepDays: 30,   readOnly: true },\n  { label: 'LLMailSorter/Not sure',      keepDays: 30,   readOnly: true },\n  { label: 'LLMailSorter/Other',         keepDays: 30,   readOnly: true },\n  { label: 'LLMailSorter/Orders',        keepDays: 180,  readOnly: true },\n  { label: 'LLMailSorter/Jobs',          keepDays: 730,  readOnly: true },\n];\n\n// Builds the Gmail search query matching the emails a rule should trash.\nfunction buildQuery(rule) {\n  const parts = [`older_than:${rule.keepDays}d`, '-is:starred'];\n  if (rule.label) parts.push(`label:\"${rule.label}\"`);\n  if (rule.readOnly) parts.push('-is:unread');\n  return parts.join(' ');\n}\n\nreturn RETENTION_RULES.map(rule => ({\n  json: { ...rule, query: buildQuery(rule) },\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "40204e2c-09cc-41f7-882c-9f9a5299f185",
+      "name": "Retention rules"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 500,
+        "filters": {
+          "q": "={{ $json.query }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "68920503-c5eb-49b5-8579-22f2ebabca30",
+      "name": "Find expired emails",
+      "webhookId": "ac8ade29-0cf5-43d8-8482-a6490b1b9068",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": "={{ [\"TRASH\"] }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "63830291-0f96-42d0-aa5a-75a973da2556",
+      "name": "Move to trash",
+      "webhookId": "87a42077-1887-4797-8f9c-fb5f9e6659f9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "3d691c56-ba97-4284-9f82-c7d0217e8b14",
+      "name": "Every hour"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Retention rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retention rules": {
+      "main": [
+        [
+          {
+            "node": "Find expired emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find expired emails": {
+      "main": [
+        [
+          {
+            "node": "Move to trash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every hour": {
+      "main": [
+        [
+          {
+            "node": "Retention rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cb7cd4e3-1e37-4b20-b943-03affe737553",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "RY1qWGAHIGgEgNbX",
+  "tags": []
+}
