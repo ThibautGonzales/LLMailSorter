@@ -1,0 +1,400 @@
+{
+  "name": "20 - Sort Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "LLMailSorter - Sort Gmail",
+        "formDescription": "Sorts unlabelled inbox emails",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c88f4659-20e6-4214-bdda-651be0787d15",
+      "name": "On form submission",
+      "webhookId": "7aca15c0-4eb1-4f63-870c-bea649e2f1c4"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {
+          "q": "=in:inbox has:nouserlabels"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7f8c1b75-08d5-4bcd-aec7-5b829f1805e0",
+      "name": "Get many messages",
+      "webhookId": "6686a65c-55ea-4264-9a56-90838555f805",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62ab5455-71dd-4107-a966-42aae477436a",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "8311de09-300c-4765-bb83-1a1235f6ae61",
+              "name": "sender",
+              "value": "={{ $json.from.text }}",
+              "type": "string"
+            },
+            {
+              "id": "b9485580-bf28-45f5-a6d6-db5dfa85a725",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "64df6a95-943e-42da-8f4c-77c307c2d1cb",
+              "name": "bodyStart",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "25da13e1-9ad9-4c87-afa9-9d36419378da",
+      "name": "Prepare classify input"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PxDdPFN9okQwc5Bh",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/PxDdPFN9okQwc5Bh",
+          "cachedResultName": "10 - Classify email"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sender": "={{ $json.sender }}",
+            "subject": "={{ $json.subject }}",
+            "bodyStart": "={{ $json.bodyStart }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "bodyStart",
+              "displayName": "bodyStart",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        672,
+        128
+      ],
+      "id": "c4abdd78-628c-48d8-b6bd-b2866d88ef34",
+      "name": "Classify email"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        16
+      ],
+      "id": "0c55d770-3607-458b-af9d-a8efde0c0f02",
+      "name": "Attach category"
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        16
+      ],
+      "id": "60b017d3-0b98-4f6a-8749-6bddbc001cde",
+      "name": "Get Gmail labels",
+      "webhookId": "f59abea9-8da3-4e2a-b97f-6c9365c24eb0",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Maps each classify-email category id to its Gmail label and archive setting.\nconst CATEGORY_LABELS = {\n  subscriptions: { label: 'Subscriptions', archive: true },\n  invoices: { label: 'Invoices', archive: true },\n  jobs: { label: 'Jobs', archive: true },\n  admin: { label: 'Admin', archive: true },\n  orders: { label: 'Orders', archive: true },\n  personal: { label: 'Personal', archive: true },\n  security: { label: 'Security', archive: true },\n  trash: { label: 'Junk', archive: true },\n  other: { label: 'Other', archive: true },\n  // Kept in the inbox: there is no preview, so uncertain emails stay visible for a manual check.\n  notSure: { label: 'Not sure', archive: false },\n};\n\nconst labelIdsByName = Object.fromEntries(\n  $input.all().map((gmailLabel) => [gmailLabel.json.name, gmailLabel.json.id]),\n);\n\nreturn $('Attach category').all().map((email) => {\n  const { label, archive } = CATEGORY_LABELS[email.json.category] ?? CATEGORY_LABELS.notSure;\n  const labelName = `LLMailSorter/${label}`;\n  const labelId = labelIdsByName[labelName];\n  if (!labelId) {\n    throw new Error(`Gmail label \"${labelName}\" not found. Run \"01 - Create Gmail labels\" first.`);\n  }\n  return { json: { ...email.json, labelName, labelId, archive } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        16
+      ],
+      "id": "8d3fd5a8-e62f-407d-9f21-2557f21b28e3",
+      "name": "Resolve Gmail label"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": "={{ [$json.labelId] }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        16
+      ],
+      "id": "feed3a40-1720-48d1-9a34-f109cdb6b515",
+      "name": "Add category label",
+      "webhookId": "3fe06381-3997-4acc-baa0-26a7ce678511",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "1a8ec0c3-5729-4586-b8d2-b50c4bcba2fc",
+              "leftValue": "={{ $('Resolve Gmail label').item.json.archive }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1792,
+        16
+      ],
+      "id": "c1def2ca-ca34-418d-95bb-a55fce5e1ee2",
+      "name": "Should archive?"
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "INBOX"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        -160
+      ],
+      "id": "ac8d1f62-fd6a-454b-8478-88d041bdf550",
+      "name": "Remove label from message",
+      "webhookId": "cf7205f6-073a-403c-b340-f3bed652b304",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Prepare classify input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare classify input": {
+      "main": [
+        [
+          {
+            "node": "Classify email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify email": {
+      "main": [
+        [
+          {
+            "node": "Attach category",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Attach category": {
+      "main": [
+        [
+          {
+            "node": "Get Gmail labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Gmail labels": {
+      "main": [
+        [
+          {
+            "node": "Resolve Gmail label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Gmail label": {
+      "main": [
+        [
+          {
+            "node": "Add category label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add category label": {
+      "main": [
+        [
+          {
+            "node": "Should archive?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should archive?": {
+      "main": [
+        [
+          {
+            "node": "Remove label from message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cf50e5bd-183f-40b9-b2e3-f7cf4ac16d6b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "xeImFHvWdhZAczka",
+  "tags": []
+}

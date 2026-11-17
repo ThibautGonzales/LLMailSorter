@@ -1,0 +1,91 @@
+{
+  "name": "01 - Create Gmail labels",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e75eacfe-8d3b-43f6-b412-e4de16987d62",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parent label first: Gmail nests \"LLMailSorter/X\" under \"LLMailSorter\" only if the parent exists.\nconst categoryLabels = [\n  'Subscriptions', 'Invoices', 'Jobs', 'Admin', 'Orders',\n  'Personal', 'Security', 'Junk', 'Other', 'Not sure',\n];\n\nreturn [\n  { json: { name: 'LLMailSorter' } },\n  ...categoryLabels.map((label) => ({ json: { name: `LLMailSorter/${label}` } })),\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "6a1c225a-cf45-492c-acc3-3e38bf3c0fce",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "operation": "create",
+        "name": "={{ $json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "16b4da31-8f18-4893-abde-db45e3a04fd7",
+      "name": "Create a label",
+      "webhookId": "a5135c3a-5f97-4393-b54f-50a3c8e4f732",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e10d32d2-5816-4223-9193-dafee11c8750",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "PvmVZG9vdOTNPCAA",
+  "tags": []
+}
