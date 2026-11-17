@@ -36,6 +36,7 @@ credentials or pinned data). To use one:
 | `01-create-gmail-labels.json` | Run once: creates the `LLMailSorter` Gmail label and its 10 category sub-labels. |
 | `10-classify-email.json` | Sub-workflow that picks the category of one email with Gemini Decision 1. Returns `category` and `confidence`. See [docs/llm-provider.md](docs/llm-provider.md). |
 | `20-sort-gmail.json` | Sorts the Gmail inbox: a form button that labels and archives up to 50 unlabelled emails. See [Sorting Gmail](#sorting-gmail). |
+| `30-cleanup-gmail.json` | Moves expired emails to the Gmail trash, every hour or on demand. Starred emails are never touched. See [Cleaning up old emails](#cleaning-up-old-emails). |
 
 After importing `20-sort-gmail.json`, also open its **Classify email** node and
 select your `10 - Classify email` workflow: workflow ids differ between n8n
@@ -75,3 +76,42 @@ For each email, the workflow:
 To change a label name or the archive setting, edit one line of
 `CATEGORY_LABELS`. If you rename a label, rename it in Gmail too (or in
 `01 - Create Gmail labels`, then run it again).
+
+## Cleaning up old emails
+
+`30 - Cleanup Gmail` moves emails that no longer need to be kept to the Gmail
+trash. It runs every hour once the workflow is published (n8n does not catch up
+on runs missed while it was stopped), and can also be run by hand with
+**Execute workflow**, for example on a large mailbox before the first sort.
+
+Safety rules:
+
+- **Starred emails are never trashed**, whatever the rule. Star an email to keep
+  it. Gmail's "important" marker is ignored.
+- Emails go to the **trash**, never deleted for good: Gmail empties the trash
+  after 30 days, so a mistake can be undone until then. Do not replace the
+  **Move to trash** node with the Gmail **Delete** operation, which is
+  permanent.
+- No LLM is involved: the rules are plain Gmail searches.
+- Each rule trashes at most 500 emails per run, to stay within Gmail API quotas.
+
+The rules live in the `RETENTION_RULES` table of the **Retention rules** Code
+node. Each row becomes a Gmail search such as
+`older_than:7d -is:starred label:"LLMailSorter/Junk" -is:unread`.
+
+| Gmail label | Kept for | Only if read |
+|---|---|---|
+| Everything (any email, sent ones included) | 3 years | no |
+| `LLMailSorter/Junk` | 7 days | yes |
+| `LLMailSorter/Subscriptions` | 30 days | yes |
+| `LLMailSorter/Security` | 30 days | yes |
+| `LLMailSorter/Not sure` | 30 days | yes |
+| `LLMailSorter/Other` | 30 days | yes |
+| `LLMailSorter/Orders` | 180 days | yes |
+| `LLMailSorter/Jobs` | 2 years | yes |
+
+`Invoices`, `Admin` and `Personal` have no row of their own: only the
+Everything rule applies to them. Unread emails are left alone by the label
+rules, so an email you have not opened yet only goes after 3 years.
+
+To change a duration, edit `keepDays` in one row. To add a rule, add a row.
