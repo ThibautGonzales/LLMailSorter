@@ -6,7 +6,8 @@ system and no analytics run by the author.
 ## What data is accessed
 
 - The tool reads emails from the Gmail account of the person who runs it,
-  through the Gmail API, only when that person triggers a sort manually.
+  through the Gmail API, when that person triggers a sort manually or when
+  the cleanup workflow they published runs on its schedule.
 - For each email, the sender, the subject and the first 500 characters of the
   body are sent to the Google Gemini API (Gemini Decision 1) to pick a
   category. Google's own terms apply to this data. The API key should belong
@@ -16,8 +17,12 @@ system and no analytics run by the author.
 ## What the tool does with it
 
 - It applies a Gmail label and may archive the email.
-- It never deletes emails on its own, never sends emails, and never shares
-  data with anyone other than the LLM provider.
+- A separate cleanup workflow, which does not use the LLM, moves emails older
+  than the retention periods set by the user to the Gmail trash. It runs on a
+  schedule chosen by the user, never touches starred emails, and never deletes
+  emails permanently: Gmail empties its trash after 30 days.
+- It never sends emails, and never shares data with anyone other than the LLM
+  provider.
 
 ## Where data is stored
 
