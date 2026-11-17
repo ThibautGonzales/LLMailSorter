@@ -1,0 +1,125 @@
+{
+  "name": "20 - Sort Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "LLMailSorter - Sort Gmail",
+        "formDescription": "Sorts unlabelled inbox emails",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c88f4659-20e6-4214-bdda-651be0787d15",
+      "name": "On form submission",
+      "webhookId": "7aca15c0-4eb1-4f63-870c-bea649e2f1c4"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {
+          "q": "=in:inbox has:nouserlabels"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7f8c1b75-08d5-4bcd-aec7-5b829f1805e0",
+      "name": "Get many messages",
+      "webhookId": "6686a65c-55ea-4264-9a56-90838555f805",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rdxghW50hQozSuEo",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62ab5455-71dd-4107-a966-42aae477436a",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "8311de09-300c-4765-bb83-1a1235f6ae61",
+              "name": "sender",
+              "value": "={{ $json.from.text }}",
+              "type": "string"
+            },
+            {
+              "id": "b9485580-bf28-45f5-a6d6-db5dfa85a725",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "64df6a95-943e-42da-8f4c-77c307c2d1cb",
+              "name": "bodyStart",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "25da13e1-9ad9-4c87-afa9-9d36419378da",
+      "name": "Prepare classify input"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Prepare classify input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "25b07fc8-b329-40e7-a10e-efabecef7a12",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "xeImFHvWdhZAczka",
+  "tags": []
+}
