@@ -275,6 +275,25 @@
           "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -144
+      ],
+      "id": "82cacbe6-9f23-4fbe-a88c-eeae43745b0c",
+      "name": "Every 5 minutes"
     }
   ],
   "pinData": {},
@@ -382,14 +401,25 @@
           }
         ]
       ]
+    },
+    "Every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "cf50e5bd-183f-40b9-b2e3-f7cf4ac16d6b",
+  "versionId": "a04e3edb-d12f-4ce4-b4f0-12e13419d043",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
