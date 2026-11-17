@@ -35,7 +35,7 @@ credentials or pinned data). To use one:
 | `00-test-gmail.json` | Checks the Gmail connection: a form button that reads the 5 most recent emails, without modifying anything. |
 | `01-create-gmail-labels.json` | Run once: creates the `LLMailSorter` Gmail label and its 10 category sub-labels. |
 | `10-classify-email.json` | Sub-workflow that picks the category of one email with Gemini Decision 1. Returns `category` and `confidence`. See [docs/llm-provider.md](docs/llm-provider.md). |
-| `20-sort-gmail.json` | Sorts the Gmail inbox: a form button that labels and archives up to 50 unlabelled emails. See [Sorting Gmail](#sorting-gmail). |
+| `20-sort-gmail.json` | Sorts the Gmail inbox: every 5 minutes (or from a form button), labels and archives up to 50 unlabelled emails. See [Sorting Gmail](#sorting-gmail). |
 | `30-cleanup-gmail.json` | Moves expired emails to the Gmail trash, every hour or on demand. Starred emails are never touched. See [Cleaning up old emails](#cleaning-up-old-emails). |
 
 After importing `20-sort-gmail.json`, also open its **Classify email** node and
@@ -45,8 +45,15 @@ instances.
 ## Sorting Gmail
 
 1. Import and run `01 - Create Gmail labels` once.
-2. Open the form of `20 - Sort Gmail` and submit it. Each run handles up to 50
-   emails; submit again until the inbox is sorted.
+2. Publish `20 - Sort Gmail`. While n8n is running, the **Every 5 minutes**
+   Schedule Trigger sorts new emails automatically. Emails received while n8n
+   was stopped are caught up by the first run after it starts.
+3. To sort a large backlog faster, open the workflow's form and submit it. Each
+   run handles up to 50 emails; submit again until the inbox is sorted.
+
+The interval is 5 minutes, not 1, because a run of 50 emails can take more than
+a minute: a new run starting before the previous one ends could sort the same
+emails twice.
 
 Which emails are sorted: every inbox email without a user label
 (`in:inbox has:nouserlabels`), read or unread. An email you labelled yourself is
