@@ -17,6 +17,8 @@ Stop it with `docker compose down` (data is kept in Docker volumes).
 Then:
 
 - connect Gmail: see [docs/setup-google-oauth.md](docs/setup-google-oauth.md);
+- connect Outlook / Hotmail: see
+  [docs/setup-microsoft-oauth.md](docs/setup-microsoft-oauth.md);
 - add the Gemini API key used to classify emails: see
   [docs/llm-provider.md](docs/llm-provider.md).
 
@@ -27,28 +29,47 @@ credentials or pinned data). To use one:
 
 1. In n8n, create a new workflow, open the **...** menu (top right) and choose
    **Import from File**.
-2. Open each Gmail or HTTP Request node and select the matching credential.
+2. Open each Gmail, Microsoft Outlook or HTTP Request node and select the
+   matching credential.
 3. Save.
 
 | File | Purpose |
 |---|---|
 | `00-test-gmail.json` | Checks the Gmail connection: a form button that reads the 5 most recent emails, without modifying anything. |
+| `00-test-outlook.json` | Same check for Outlook / Hotmail. |
 | `01-create-gmail-labels.json` | Run once: creates the `LLMailSorter` Gmail label and its 10 category sub-labels. |
+| `02-create-outlook-folders.json` | Run once: creates the `LLMailSorter` Outlook folder and its 10 category sub-folders. |
 | `10-classify-email.json` | Sub-workflow that picks the category of one email with Gemini Decision 1. Returns `category` and `confidence`. See [docs/llm-provider.md](docs/llm-provider.md). |
 | `20-sort-gmail.json` | Sorts the Gmail inbox: every 5 minutes (or from a form button), labels and archives up to 50 unlabelled emails. See [Sorting Gmail](#sorting-gmail). |
+| `21-sort-outlook.json` | Sorts the Outlook inbox: every 5 minutes (or from a form button), moves up to 50 inbox emails to their category folder. See [Sorting Outlook](#sorting-outlook). |
 | `30-cleanup-gmail.json` | Moves expired emails to the Gmail trash, every hour or on demand. Starred emails are never touched. See [Cleaning up old emails](#cleaning-up-old-emails). |
+| `31-cleanup-outlook.json` | Moves expired emails to the Outlook Deleted Items folder, every hour or on demand. Flagged emails are never touched. See [Cleaning up old Outlook emails](#cleaning-up-old-outlook-emails). |
 
-After importing `20-sort-gmail.json`, also open its **Classify email** node and
-select your `10 - Classify email` workflow: workflow ids differ between n8n
-instances.
+After importing `20-sort-gmail.json` or `21-sort-outlook.json`, also open its
+**Classify email** node and select your `10 - Classify email` workflow:
+workflow ids differ between n8n instances. In `21-sort-outlook.json`, also
+select **Inbox** again in the **Folders to Include** filter of **Get many
+messages**: folder ids differ between mailboxes.
+
+## Before the first sort: clean up first
+
+On a mailbox that already holds years of emails, **run the cleanup workflow by
+hand before publishing the sorting workflow** (`30 - Cleanup Gmail` or
+`31 - Cleanup Outlook`, with **Execute workflow**). Each run moves at most 500
+emails per rule, so run it again until it no longer finds anything to move.
+
+This way, the sorting workflow never classifies emails that are about to be
+deleted anyway, and you do not spend Gemini API credits on them.
 
 ## Sorting Gmail
 
 1. Import and run `01 - Create Gmail labels` once.
-2. Publish `20 - Sort Gmail`. While n8n is running, the **Every 5 minutes**
+2. Clean up old emails first: see
+   [Before the first sort](#before-the-first-sort-clean-up-first).
+3. Publish `20 - Sort Gmail`. While n8n is running, the **Every 5 minutes**
    Schedule Trigger sorts new emails automatically. Emails received while n8n
    was stopped are caught up by the first run after it starts.
-3. To sort a large backlog faster, open the workflow's form and submit it. Each
+4. To sort a large backlog faster, open the workflow's form and submit it. Each
    run handles up to 50 emails; submit again until the inbox is sorted.
 
 The interval is 5 minutes, not 1, because a run of 50 emails can take more than
@@ -122,3 +143,68 @@ Everything rule applies to them. Unread emails are left alone by the label
 rules, so an email you have not opened yet only goes after 3 years.
 
 To change a duration, edit `keepDays` in one row. To add a rule, add a row.
+
+## Sorting Outlook
+
+Outlook has no labels: each category is a sub-folder of `LLMailSorter`, and
+moving an email there takes it out of the inbox.
+
+1. Connect Outlook: see [docs/setup-microsoft-oauth.md](docs/setup-microsoft-oauth.md).
+2. Import and run `02 - Create Outlook folders` once.
+3. Clean up old emails first: see
+   [Before the first sort](#before-the-first-sort-clean-up-first).
+4. Publish `21 - Sort Outlook`. Like the Gmail workflow, it runs every 5
+   minutes while n8n is running, and its form sorts a backlog faster (50 emails
+   per run).
+
+Which emails are sorted: every email in the inbox, read or unread. A sorted
+email has left the inbox, so it is never sorted twice. Moving an email does not
+change its read/unread status.
+
+For each email, the workflow:
+
+1. calls `10 - Classify email` with the sender, subject and `bodyPreview` (the
+   first 255 characters of the body, as plain text, provided by Microsoft);
+2. maps the returned category to a folder (the `CATEGORY_FOLDERS` table in the
+   **Resolve Outlook folder** Code node);
+3. moves the email to that folder.
+
+| Category | Outlook folder |
+|---|---|
+| `subscriptions` | `LLMailSorter/Subscriptions` |
+| `invoices` | `LLMailSorter/Invoices` |
+| `jobs` | `LLMailSorter/Jobs` |
+| `admin` | `LLMailSorter/Admin` |
+| `orders` | `LLMailSorter/Orders` |
+| `personal` | `LLMailSorter/Personal` |
+| `security` | `LLMailSorter/Security` |
+| `trash` | `LLMailSorter/Junk` |
+| `other` | `LLMailSorter/Other` |
+| `notSure` | `LLMailSorter/Not sure` (check it from time to time) |
+
+Unlike Gmail, `Not sure` emails also leave the inbox: an email in the inbox is
+always an unsorted one.
+
+## Cleaning up old Outlook emails
+
+`31 - Cleanup Outlook` applies the same retention rules as
+[the Gmail cleanup](#cleaning-up-old-emails), with the same durations, to the
+`LLMailSorter` sub-folders. It runs every hour once published, and can be run
+by hand with **Execute workflow**.
+
+Safety rules:
+
+- **Flagged emails are never moved**, whatever the rule. Flag an email to keep
+  it.
+- Emails are moved to the **Deleted Items** folder, where they can be restored.
+  Do not replace the **Move** node with the Outlook **Delete** operation: it
+  skips Deleted Items.
+- Folder rules only move emails already read. The Everything rule (3 years)
+  moves any email, read or unread, from every folder (sent ones included)
+  except Deleted Items.
+- No LLM is involved: each rule is a Microsoft Graph filter such as
+  `receivedDateTime lt <date> and flag/flagStatus ne 'flagged' and isRead eq true`.
+- Each rule moves at most 500 emails per run.
+
+The rules live in the `RETENTION_RULES` table of the **Retention rules** Code
+node, one row per sub-folder (`folder: null` is the Everything rule).
