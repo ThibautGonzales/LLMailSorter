@@ -1,0 +1,347 @@
+{
+  "name": "21 - Sort Outlook",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "LLMailSorter - Sort Outlook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3c307644-377a-4c4c-aa4a-2a790931877d",
+      "name": "LLMailSorter - Sort Outlook",
+      "webhookId": "357b1d0c-aff1-4150-942a-f7f7651d116d"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 50,
+        "filtersUI": {
+          "values": {
+            "filters": {
+              "foldersToInclude": [
+                "AQMkADAwATZiZmYAZC1lZQA5Yi1iNzIyAC0wMAItMDAKAC4AAAMM8yUsqLFxQ44fMB_oBPYWAQDTGGNBlHTCQZM5EoII1I79AAACAQwAAAA="
+              ]
+            }
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2a9c9664-b75c-4e4c-9bc6-4085f7d05d79",
+      "name": "Get many messages",
+      "webhookId": "68245212-7a1a-4003-99f7-06c0836ad1d9",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b362f58d-28bb-4726-8551-3635684c5e58",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "0c8c1fbc-46db-4339-b64a-5fc6d8758eee",
+              "name": "sender",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "e5351099-044e-49d9-98ac-0d4c3cf85aec",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "999b6d55-bffe-44b7-a070-d1a748fa6f2f",
+              "name": "bodyStart",
+              "value": "={{ $json.bodyPreview }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d26a8787-dcfc-4737-87fd-b40c97a4faab",
+      "name": "Prepare classify input"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PxDdPFN9okQwc5Bh",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/PxDdPFN9okQwc5Bh",
+          "cachedResultName": "10 - Classify email"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sender": "={{ $json.sender }}",
+            "subject": "={{ $json.subject }}",
+            "bodyStart": "={{ $json.bodyStart }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "bodyStart",
+              "displayName": "bodyStart",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        672,
+        128
+      ],
+      "id": "e1daf752-eade-40bb-b46f-11dff5d17cc6",
+      "name": "Classify email"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        16
+      ],
+      "id": "b1742899-2760-4b75-bc60-2458ce200e05",
+      "name": "Attach category"
+    },
+    {
+      "parameters": {
+        "url": "https://graph.microsoft.com/v1.0/me/mailFolders",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "=$filter",
+              "value": "=displayName eq 'LLMailSorter'"
+            },
+            {
+              "name": "$expand",
+              "value": "childFolders"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        16
+      ],
+      "id": "04108d23-1303-47a1-9c30-1da0a286e3ae",
+      "name": "HTTP Request",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Maps each classify-email category id to its Outlook folder (a sub-folder of LLMailSorter).\nconst CATEGORY_FOLDERS = {\n  subscriptions: 'Subscriptions',\n  invoices: 'Invoices',\n  jobs: 'Jobs',\n  admin: 'Admin',\n  orders: 'Orders',\n  personal: 'Personal',\n  security: 'Security',\n  trash: 'Junk',\n  other: 'Other',\n  notSure: 'Not sure',\n};\n\nconst parentFolder = $input.first().json.value[0];\nif (!parentFolder) {\n  throw new Error('Outlook folder \"LLMailSorter\" not found. Run \"02 - Create Outlook folders\" first.');\n}\n\nconst folderIdsByName = Object.fromEntries(\n  parentFolder.childFolders.map((folder) => [folder.displayName, folder.id]),\n);\n\nreturn $('Attach category').all().map((email) => {\n  const folderName = CATEGORY_FOLDERS[email.json.category] ?? CATEGORY_FOLDERS.notSure;\n  const folderId = folderIdsByName[folderName];\n  if (!folderId) {\n    throw new Error(`Outlook folder \"LLMailSorter/${folderName}\" not found. Run \"02 - Create Outlook folders\" first.`);\n  }\n  return { json: { ...email.json, folderName, folderId } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        16
+      ],
+      "id": "737338f5-a4e8-4e80-8915-0232992c5eff",
+      "name": "Resolve Outlook folder"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.folderId }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        16
+      ],
+      "id": "f0da246e-3695-4690-843f-6c415afbf7d9",
+      "name": "Move to category folder",
+      "webhookId": "458e34ee-a65c-4c0c-a8af-7b4d08e87ed6",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "LLMailSorter - Sort Outlook": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Prepare classify input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare classify input": {
+      "main": [
+        [
+          {
+            "node": "Classify email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify email": {
+      "main": [
+        [
+          {
+            "node": "Attach category",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Attach category": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Resolve Outlook folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Outlook folder": {
+      "main": [
+        [
+          {
+            "node": "Move to category folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b3946f23-2dcf-4fbf-b09d-df148a09e072",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "PdhV75ktwr1NKC2M",
+  "tags": []
+}
