@@ -63,8 +63,6 @@ its token. Create a new secret, paste it into the credential and sign in again.
 3. Turn on **Custom Scopes** and set **Enabled Scopes** to:
    `openid offline_access Mail.ReadWrite`
    That is all LLMailSorter needs: read emails, create folders and move emails.
-   n8n's default scopes would also allow sending emails and reading contacts
-   and calendars.
 4. Rename the credential to `Outlook - <your address>`.
 5. Click **Connect my account**, pick your Hotmail / Outlook.com account and
    accept the permissions, then **Save**. The credential should show as
