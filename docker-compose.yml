@@ -42,6 +42,9 @@ services:
       N8N_DIAGNOSTICS_ENABLED: "false"
       # Listen on IPv4: avoids a startup crash on hosts without IPv6.
       N8N_LISTEN_ADDRESS: 0.0.0.0
+      # Prefer IPv4 for outgoing calls: Microsoft Graph also resolves to IPv6
+      # addresses, which fail with ENETUNREACH when Docker has no IPv6 route.
+      NODE_OPTIONS: --dns-result-order=ipv4first
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
