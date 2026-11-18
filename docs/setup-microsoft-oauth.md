@@ -56,7 +56,9 @@ its token. Create a new secret, paste it into the credential and sign in again.
 
 ## 4. Finish the credential in n8n
 
-1. Paste the Client ID and the secret Value into the n8n credential.
+1. Paste the **Application (client) ID** (app **Overview** page, step 2.6)
+   into **Client ID**, and the secret **Value** (step 3) into **Client
+   Secret**. Do not use the **Directory (tenant) ID** or the **Secret ID**.
 2. Leave **Use Shared Inbox** off (shared inboxes are a Microsoft 365 feature).
 3. Turn on **Custom Scopes** and set **Enabled Scopes** to:
    `openid offline_access Mail.ReadWrite`
