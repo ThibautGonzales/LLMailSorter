@@ -137,7 +137,7 @@
         0
       ],
       "id": "a04fb3f0-2706-48fa-aadc-bfc3ec41e67d",
-      "name": "Move a message",
+      "name": "Move to Deleted Items",
       "webhookId": "24b35079-aa99-49e2-be42-728aa2348323",
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -247,7 +247,7 @@
       "main": [
         [
           {
-            "node": "Move a message",
+            "node": "Move to Deleted Items",
             "type": "main",
             "index": 0
           }
