@@ -1,0 +1,122 @@
+{
+  "name": "00 - Test Outlook connection",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Start test",
+        "formDescription": "Reads the 5 most recent emails. Nothing is modified.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "322110a1-6163-4a4d-8138-505f5f4b81cd",
+      "name": "Start test",
+      "webhookId": "76adf28c-3031-4e66-9cd5-652dbe76d374"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "0f4235f0-f5d7-4dcd-8c80-cbedde48509b",
+      "name": "Get latest emails",
+      "webhookId": "a8850b1e-0689-4393-abca-d92a6f819956",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6f91f361-738d-4c21-a3a9-cf324718e43e",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a588b0b1-35e2-4163-8d8d-064b6fae7f79",
+              "name": "from",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "4961341e-3f99-4ca4-b1ac-2562a491791c",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "cd731aa4-a0be-44c4-863e-48ff74697488",
+              "name": "bodyPreview",
+              "value": "={{ $json.bodyPreview }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "5aaa0560-eb9b-4fc6-8c26-60cae32e995f",
+      "name": "Keep sorting fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start test": {
+      "main": [
+        [
+          {
+            "node": "Get latest emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest emails": {
+      "main": [
+        [
+          {
+            "node": "Keep sorting fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "17f0410a-e53e-42b8-b1bb-219b7a083125",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "00ExC0bFvykGXMpd",
+  "tags": []
+}
