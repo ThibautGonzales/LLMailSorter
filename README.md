@@ -41,9 +41,9 @@ credentials or pinned data). To use one:
 | `02-create-outlook-folders.json` | Run once: creates the `LLMailSorter` Outlook folder and its 10 category sub-folders. |
 | `10-classify-email.json` | Sub-workflow that picks the category of one email with Gemini Decision 1. Returns `category` and `confidence`. See [docs/llm-provider.md](docs/llm-provider.md). |
 | `20-sort-gmail.json` | Sorts the Gmail inbox: every 5 minutes (or from a form button), labels and archives up to 50 unlabelled emails. See [Sorting Gmail](#sorting-gmail). |
-| `21-sort-outlook.json` | Sorts the Outlook inbox: every 5 minutes (or from a form button), moves up to 50 inbox emails to their category folder. See [Sorting Outlook](#sorting-outlook). |
+| `21-sort-outlook.json` | Sorts the Outlook inbox: every 20 minutes (or from a form button), moves up to 50 inbox emails to their category folder. See [Sorting Outlook](#sorting-outlook). |
 | `30-cleanup-gmail.json` | Moves expired emails to the Gmail trash, every hour or on demand. Starred emails are never touched. See [Cleaning up old emails](#cleaning-up-old-emails). |
-| `31-cleanup-outlook.json` | Moves expired emails to the Outlook Deleted Items folder, every hour or on demand. Flagged emails are never touched. See [Cleaning up old Outlook emails](#cleaning-up-old-outlook-emails). |
+| `31-cleanup-outlook.json` | Moves expired emails to the Outlook Deleted Items folder, every hour at minute 10 or on demand. Flagged emails are never touched. See [Cleaning up old Outlook emails](#cleaning-up-old-outlook-emails). |
 
 After importing `20-sort-gmail.json` or `21-sort-outlook.json`, also open its
 **Classify email** node and select your `10 - Classify email` workflow:
@@ -153,9 +153,14 @@ moving an email there takes it out of the inbox.
 2. Import and run `02 - Create Outlook folders` once.
 3. Clean up old emails first: see
    [Before the first sort](#before-the-first-sort-clean-up-first).
-4. Publish `21 - Sort Outlook`. Like the Gmail workflow, it runs every 5
-   minutes while n8n is running, and its form sorts a backlog faster (50 emails
-   per run).
+4. Publish `21 - Sort Outlook`. While n8n is running, the **Every 20 minutes**
+   Schedule Trigger sorts new emails automatically, and its form sorts a
+   backlog faster (50 emails per run).
+
+Outlook runs less often than Gmail because Microsoft Graph quickly rejects
+bursts of calls with `429 Too Many Requests`. Sorting runs at minutes 0, 20 and
+40, and the cleanup at minute 10, so the two workflows never call Microsoft at
+the same time.
 
 Which emails are sorted: every email in the inbox, read or unread. A sorted
 email has left the inbox, so it is never sorted twice. Moving an email does not
@@ -189,7 +194,8 @@ always an unsorted one.
 
 `31 - Cleanup Outlook` applies the same retention rules as
 [the Gmail cleanup](#cleaning-up-old-emails), with the same durations, to the
-`LLMailSorter` sub-folders. It runs every hour once published, and can be run
+`LLMailSorter` sub-folders. It runs every hour at minute 10 once published
+(between two sorting runs, see [Sorting Outlook](#sorting-outlook)), and can be run
 by hand with **Execute workflow**.
 
 Safety rules:

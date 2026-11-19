@@ -17,7 +17,8 @@
         "rule": {
           "interval": [
             {
-              "field": "hours"
+              "field": "hours",
+              "triggerAtMinute": 10
             }
           ]
         }
@@ -29,7 +30,7 @@
         -144
       ],
       "id": "f1809cef-5664-403c-99b0-a3e026ebd278",
-      "name": "Every hour"
+      "name": "Every hour at minute 10"
     },
     {
       "parameters": {
@@ -40,8 +41,8 @@
         "queryParameters": {
           "parameters": [
             {
-              "name": "=$filter",
-              "value": "=displayName eq 'LLMailSorter'"
+              "name": "$filter",
+              "value": "displayName eq 'LLMailSorter'"
             },
             {
               "name": "$expand",
@@ -118,36 +119,6 @@
     },
     {
       "parameters": {
-        "operation": "move",
-        "messageId": {
-          "__rl": true,
-          "value": "={{ $json.id }}",
-          "mode": "id"
-        },
-        "folderId": {
-          "__rl": true,
-          "value": "={{ $('Get Deleted Items folder').item.json.id }}",
-          "mode": "id"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        1376,
-        0
-      ],
-      "id": "a04fb3f0-2706-48fa-aadc-bfc3ec41e67d",
-      "name": "Move to Deleted Items",
-      "webhookId": "24b35079-aa99-49e2-be42-728aa2348323",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "D4WdhqfByQEHY2Az",
-          "name": "Microsoft Outlook account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "url": "=https://graph.microsoft.com/v1.0{{ $json.path }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftOutlookOAuth2Api",
@@ -184,22 +155,41 @@
           "name": "Microsoft Outlook account"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Get Deleted Items folder').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "a04fb3f0-2706-48fa-aadc-bfc3ec41e67d",
+      "name": "Move to Deleted Items",
+      "webhookId": "24b35079-aa99-49e2-be42-728aa2348323",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
     }
   ],
   "pinData": {},
   "connections": {
     "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "Get LLMailSorter folders",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Every hour": {
       "main": [
         [
           {
@@ -264,14 +254,25 @@
           }
         ]
       ]
+    },
+    "Every hour at minute 10": {
+      "main": [
+        [
+          {
+            "node": "Get LLMailSorter folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "1c8fd78f-b847-4413-99b5-a4b12db3a8db",
+  "versionId": "461867a9-016c-4acb-a348-14f8366a904f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
