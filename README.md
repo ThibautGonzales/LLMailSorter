@@ -1,5 +1,16 @@
 # LLMailSorter
-An email sorter, powered by LLM
+
+LLMailSorter automatically sorts a Gmail or Outlook / Hotmail inbox. Every few
+minutes, each new email is classified by an LLM (Google Gemini) into one of ten
+categories (invoices, jobs, orders, security, junk...) and filed under the
+matching Gmail label or Outlook folder. A second set of workflows cleans up old
+mail on a schedule, following per-category retention rules, while never
+touching starred or flagged emails. Everything runs locally and the code is
+plain n8n workflows that can be imported in a few clicks.
+
+**Tech stack:** [n8n](https://n8n.io) (workflow automation), Docker Compose,
+PostgreSQL, Google Gemini (Decisions API), Gmail API, Microsoft Graph API
+(Outlook / Hotmail).
 
 ## Quick start
 
