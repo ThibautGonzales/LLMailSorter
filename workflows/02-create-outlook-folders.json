@@ -1,0 +1,128 @@
+{
+  "name": "02 - Create Outlook folders",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2a5d91eb-30a5-463d-97a2-e64669d793d9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "displayName": "LLMailSorter",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "ebbc6e2d-5dc5-4a9f-a308-266189b6ddde",
+      "name": "Create parent folder",
+      "webhookId": "a7ca0ca6-03e9-4e83-9fe8-243b352c6dc1",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// One sub-folder per category. Every sorted email is moved to one of them.\nconst categoryFolders = [\n  'Subscriptions', 'Invoices', 'Jobs', 'Admin', 'Orders',\n  'Personal', 'Security', 'Junk', 'Other', 'Not sure',\n];\n\nconst parentFolderId = $('Create parent folder').first().json.id;\n\nreturn categoryFolders.map((name) => ({ json: { name, parentFolderId } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "de82204c-9c9a-4dbf-83d9-eb8ff67e54df",
+      "name": "List category folders"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "displayName": "={{ $json.name }}",
+        "options": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.parentFolderId }}",
+            "mode": "id"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "196d7d9e-2cfd-4001-bb5a-f43ae8882343",
+      "name": "Create category folder",
+      "webhookId": "b7e845df-76b5-4d91-8c60-2fd3076f2435",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Create parent folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create parent folder": {
+      "main": [
+        [
+          {
+            "node": "List category folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List category folders": {
+      "main": [
+        [
+          {
+            "node": "Create category folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0c24831a-873f-4546-bf85-20ff1c45e669",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "zfO4rwWYmpY4ZTru",
+  "tags": []
+}

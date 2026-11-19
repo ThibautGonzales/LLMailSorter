@@ -1,0 +1,283 @@
+{
+  "name": "31 - Cleanup Outlook",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "81e3c4ba-e1aa-45d1-b35b-e13bd244c86d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -144
+      ],
+      "id": "f1809cef-5664-403c-99b0-a3e026ebd278",
+      "name": "Every hour at minute 10"
+    },
+    {
+      "parameters": {
+        "url": "https://graph.microsoft.com/v1.0/me/mailFolders",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "$filter",
+              "value": "displayName eq 'LLMailSorter'"
+            },
+            {
+              "name": "$expand",
+              "value": "childFolders"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        288,
+        0
+      ],
+      "id": "c90ce827-13a6-4251-bbfb-20d48d467734",
+      "name": "Get LLMailSorter folders",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://graph.microsoft.com/v1.0/me/mailFolders/deleteditems",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        496,
+        0
+      ],
+      "id": "e2e39927-cd08-4248-87a1-95e22e0a96b8",
+      "name": "Get Deleted Items folder",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retention rules: one row per LLMailSorter sub-folder, easy to tune.\n// Flagged emails are never moved, whatever the rule.\n// readOnly: true = only emails already opened are moved (unread ones wait for the Everything rule).\nconst RETENTION_RULES = [\n  { folder: null,            keepDays: 1095, readOnly: false }, // Everything\n  { folder: 'Junk',          keepDays: 7,    readOnly: true },\n  { folder: 'Subscriptions', keepDays: 30,   readOnly: true },\n  { folder: 'Security',      keepDays: 30,   readOnly: true },\n  { folder: 'Not sure',      keepDays: 30,   readOnly: true },\n  { folder: 'Other',         keepDays: 30,   readOnly: true },\n  { folder: 'Orders',        keepDays: 180,  readOnly: true },\n  { folder: 'Jobs',          keepDays: 730,  readOnly: true },\n];\n\nconst parentFolder = $('Get LLMailSorter folders').first().json.value[0];\nif (!parentFolder) {\n  throw new Error('Outlook folder \"LLMailSorter\" not found. Run \"02 - Create Outlook folders\" first.');\n}\nconst folderIdsByName = Object.fromEntries(\n  parentFolder.childFolders.map((folder) => [folder.displayName, folder.id]),\n);\nconst deletedItemsId = $input.first().json.id;\n\n// Builds the Microsoft Graph path and OData filter matching the emails a rule should move.\nfunction buildRequest(rule) {\n  const cutoff = new Date(Date.now() - rule.keepDays * 24 * 60 * 60 * 1000).toISOString();\n  const conditions = [`receivedDateTime lt ${cutoff}`, \"flag/flagStatus ne 'flagged'\"];\n  if (rule.readOnly) conditions.push('isRead eq true');\n\n  if (!rule.folder) {\n    // Everything: all folders, sent emails included, except what is already in Deleted Items.\n    conditions.push(`parentFolderId ne '${deletedItemsId}'`);\n    return { path: '/me/messages', filter: conditions.join(' and ') };\n  }\n\n  const folderId = folderIdsByName[rule.folder];\n  if (!folderId) {\n    throw new Error(`Outlook folder \"LLMailSorter/${rule.folder}\" not found.`);\n  }\n  return { path: `/me/mailFolders/${folderId}/messages`, filter: conditions.join(' and ') };\n}\n\nreturn RETENTION_RULES.map((rule) => ({ json: { ...rule, ...buildRequest(rule) } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        0
+      ],
+      "id": "1619d071-13d1-4d94-9552-5e361992522b",
+      "name": "Retention rules"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "value",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        0
+      ],
+      "id": "73364d5c-268c-4c55-8f2c-ab877767fe25",
+      "name": "One item per email"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0{{ $json.path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "$filter",
+              "value": "={{ $json.filter }}"
+            },
+            {
+              "name": "$top",
+              "value": "500"
+            },
+            {
+              "name": "$select",
+              "value": "id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        928,
+        0
+      ],
+      "id": "379e2dbe-e3ed-417e-8c02-ae056288ba9a",
+      "name": "Find expired emails",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Get Deleted Items folder').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "a04fb3f0-2706-48fa-aadc-bfc3ec41e67d",
+      "name": "Move to Deleted Items",
+      "webhookId": "24b35079-aa99-49e2-be42-728aa2348323",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "D4WdhqfByQEHY2Az",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get LLMailSorter folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get LLMailSorter folders": {
+      "main": [
+        [
+          {
+            "node": "Get Deleted Items folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Deleted Items folder": {
+      "main": [
+        [
+          {
+            "node": "Retention rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retention rules": {
+      "main": [
+        [
+          {
+            "node": "Find expired emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per email": {
+      "main": [
+        [
+          {
+            "node": "Move to Deleted Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find expired emails": {
+      "main": [
+        [
+          {
+            "node": "One item per email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every hour at minute 10": {
+      "main": [
+        [
+          {
+            "node": "Get LLMailSorter folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "461867a9-016c-4acb-a348-14f8366a904f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f933db70cfe8f275bd22e9519850a091aeba84ea2ad80d3c3a2ef6960758ef45"
+  },
+  "nodeGroups": [],
+  "id": "Y3VCvshtaHmz29iC",
+  "tags": []
+}
