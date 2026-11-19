@@ -1,4 +1,6 @@
 # LLMailSorter: n8n + PostgreSQL running locally.
+# PostgreSQL is n8n's own database (workflows, encrypted credentials, executions).
+# It may also store app data for future features (e.g. automatic replies).
 # Usage: `cp .env.example .env` (then fill it in), then `docker compose up -d`.
 
 services:
