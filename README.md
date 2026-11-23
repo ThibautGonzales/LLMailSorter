@@ -246,5 +246,11 @@ Safety rules:
   `receivedDateTime lt <date> and flag/flagStatus ne 'flagged' and isRead eq true`.
 - Each rule moves at most 500 emails per run.
 
+Microsoft Graph accepts only 4 requests at a time on the same mailbox
+(`429 ApplicationThrottled`, "MailboxConcurrency limit"). The HTTP Request
+node would otherwise send its 8 searches (one per rule) all at once, so
+**Find expired emails** uses the **Batching** option (1 request per second),
+and both Graph nodes retry up to 3 times, 5 seconds apart.
+
 The rules live in the `RETENTION_RULES` table of the **Retention rules** Code
 node, one row per sub-folder (`folder: null` is the Everything rule).
